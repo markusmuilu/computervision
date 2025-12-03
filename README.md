@@ -1,3 +1,4 @@
-﻿# Automated basketball game statistic with Computer Vision
+﻿# Automated Basketball Game Statistic With Computer Vision
+
 
 
