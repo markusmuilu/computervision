@@ -1,4 +1,88 @@
-﻿# Automated Basketball Game Statistic With Computer Vision
+# Automated basketball game statistics with computer vision
 
+Player, ball and event detection on NBA broadcast footage, with tracking, drawing and a
+measured evaluation. **Unfinished** — started December 2025, paused, picked back up
+September 2026.
 
+## What it does
 
+A detect → track → draw → save pipeline over broadcast video.
+
+| Stage | Implementation |
+|---|---|
+| Detection | **RF-DETR Medium**, fine-tuned. 30 epochs, batch 5, resolution 576, seed 42, trained on a Colab GPU |
+| Tracking | **`supervision.ByteTrack`**, track ids carried across frames |
+| Inference | Batched at 20 frames, BGR→RGB, results cached to a pickle stub so detection does not re-run |
+| Output | Per-class colours, transparent overlays, `class #id` labels, written to video |
+
+Eleven classes, which are events rather than only objects: `ball`, `ball-in-basket`, `number`,
+`player`, `player-in-possession`, `player-jump-shot`, `player-layup-dunk`, `player-shot-block`,
+`referee`, `rim`.
+
+## Results
+
+Evaluated with `supervision.metrics.MeanAveragePrecision` over a **94-image held-out test split**.
+`threshold=0` at prediction time, because mAP needs the full ranked detection list rather than a
+thresholded one.
+
+| Metric | Value |
+|---|---|
+| mAP @[IoU=0.50:0.95] | **0.557** |
+| mAP @0.50 | **0.790** |
+| mAP @0.75 | 0.619 |
+| AP, small objects | **0.432** |
+| AP, medium objects | 0.437 |
+| AP, large objects | 0.654 |
+
+## What works and what does not
+
+**Player detection works.** Large-object AP of 0.654 and mAP@0.50 of 0.790 carry the average.
+
+**Small objects are where it fails, at 0.432 AP** — that bucket is the ball and the jersey
+numbers. Those are exactly what a box score depends on, since a shot cannot be attributed without
+knowing who took it or whether it went in. That is why the automated-statistics goal in the title
+is not reached.
+
+**Two honest limits on the number above:**
+
+- **The test split is in-distribution.** It comes from the same games and clips as training, so
+  0.557 measures fit, not generalisation to an unseen broadcast.
+- **Per-class AP has not been computed.** The 0.557 is an average over all eleven classes. Which
+  classes carry it and which drag it is inferred from the size buckets, not measured.
+
+**The tracking half is unmeasured.** No ID-switch count.
+
+## Running it
+
+```
+python main.py
+```
+
+Expects `input_video/nba.mp4`, and weights at `models/object_detection.pth`.
+
+**Neither is in the repository**, along with the dataset, rendered output and the virtualenv — see
+`.gitignore`. Reasons: the dataset is Roboflow's to distribute, weights and video cannot be
+reviewed in a diff, and rendered output is regenerable.
+
+- **Dataset:** [`basketball-player-detection-3`](https://universe.roboflow.com/roboflow-jvuqo/basketball-player-detection-3-ycjdo)
+  from Roboflow Universe, exported in COCO format.
+- **Weights:** RF-DETR Medium fine-tuned on that dataset. The training run is in
+  `notebooks/`, which also contains the evaluation.
+- **Input:** NBA broadcast clips.
+
+## Next
+
+- Per-class AP, which would settle which classes actually work.
+- An out-of-distribution test on footage from a different game.
+- ID-switch counting for the tracking stage.
+- Court homography, so shot locations can be placed on the court rather than in the frame.
+
+## Layout
+
+```
+main.py                    pipeline entry point
+trackers/object_tracker.py detection + ByteTrack, with stub caching
+drawers/                   overlays, boxes and labels
+utils/                     video read/write, stub load/save
+notebooks/                 training run and the mAP evaluation
+```

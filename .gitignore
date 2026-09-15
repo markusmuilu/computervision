@@ -1,0 +1,26 @@
+﻿# virtualenvs
+cv/
+.venv/
+venv/
+env/
+
+# python
+__pycache__/
+*.pyc
+
+# secrets
+.env
+
+# data, media and weights - large, and reproducible from source
+input_video/
+output/
+stubs/
+models/
+notebooks/basketball-player-detection-3-10/
+*.mp4
+*.avi
+*.mov
+*.pt
+*.pth
+*.onnx
+*.pkl
