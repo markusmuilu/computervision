@@ -18,7 +18,7 @@ class Tracker:
             batch_frames=frames[i:i+batch_size]
             batch_frames_rgb=[cv2.cvtColor(frame,cv2.COLOR_BGR2RGB) for frame in batch_frames]
 
-            batch_detections=self.model.predict(batch_frames_rgb, treshold=0.5)
+            batch_detections=self.model.predict(batch_frames_rgb, threshold=0.5)
             if isinstance(batch_detections, sv.Detections):
                 detections.append(batch_detections)
             else:

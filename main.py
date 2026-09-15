@@ -3,7 +3,6 @@ from utils import read_video, save_video
 from drawers import TracksDrawer
 
 def main():
-    tracker = Tracker()
     video_path = "input_video/nba.mp4"
 
     # Read video frames
