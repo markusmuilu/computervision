@@ -1,13 +1,21 @@
+import os
 from rfdetr import RFDETRMedium
 import supervision as sv
 import cv2
-import sys
-sys.path.append("../")
 from utils import save_stub, load_stub
 
+DEFAULT_WEIGHTS = "models/object_detection.pth"
+
 class Tracker:
-    def __init__(self):
-        self.model = RFDETRMedium(pretrain_weights="models/object_detection.pth")
+    def __init__(self, weights_path=None):
+        weights_path = weights_path or os.environ.get("BASKETBALL_CV_WEIGHTS", DEFAULT_WEIGHTS)
+        if not os.path.isfile(weights_path):
+            raise FileNotFoundError(
+                f"Model weights not found at '{weights_path}'. They are not in the repository: "
+                "see 'Running it' in README.md, then pass the path to Tracker() "
+                "or set BASKETBALL_CV_WEIGHTS."
+            )
+        self.model = RFDETRMedium(pretrain_weights=weights_path)
         self.tracker = sv.ByteTrack()
         self.class_names = self.model.class_names
 
