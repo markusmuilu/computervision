@@ -35,9 +35,16 @@ def draw_object(frame, bbox, class_name, track_id):
     return frame
 
 
+# BGR, one per class the model predicts; anything unknown falls back to red
 CLASS_COLORS = {
-    "player": (0, 128, 255),   # Orange-ish
-    "referee": (255, 255, 0),  # Yellow
-    "ball": (0, 165, 255),     # Deep orange
-    "basket": (0, 255, 0),     # Green
+    "player": (255, 144, 30),                # Blue
+    "player-in-possession": (255, 0, 255),   # Magenta
+    "player-jump-shot": (255, 255, 0),       # Cyan
+    "player-layup-dunk": (180, 105, 255),    # Pink
+    "player-shot-block": (130, 0, 75),       # Indigo
+    "referee": (200, 200, 200),              # Light grey
+    "number": (0, 255, 255),                 # Yellow
+    "ball": (0, 165, 255),                   # Orange
+    "ball-in-basket": (0, 255, 0),           # Green
+    "rim": (0, 100, 0),                      # Dark green
 }
