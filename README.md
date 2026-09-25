@@ -4,6 +4,8 @@ Player, ball and event detection on NBA broadcast footage, with tracking, drawin
 measured evaluation. **Unfinished** — started December 2025, paused, picked back up
 September 2026.
 
+![One frame of pipeline output: players, referees, ball, jersey numbers and rim, each with a track id](docs/demo.jpg)
+
 ## What it does
 
 A detect → track → draw → save pipeline over broadcast video.
@@ -35,7 +37,7 @@ weights (September 2026, RTX 5070).
 | AP, medium objects | 0.434 |
 | AP, large objects | 0.683 |
 
-The original December 2025 evaluation in `notebooks/` reported 0.557 overall on the Colab
+The original December 2025 evaluation in `notebooks/train_and_evaluate.ipynb` reported 0.557 overall on the Colab
 checkpoint. The headline agrees within 0.004 (a CPU run of the script gives 0.557 exactly), but
 the size buckets differ by up to 0.03 (large 0.654 then, 0.683 now), most likely because the
 published weights are a different checkpoint file from the same training run. The table above is
@@ -84,21 +86,30 @@ went in. That is why the automated-statistics goal in the title is not reached.
 
 ## Running it
 
+Install PyTorch for your machine first ([pytorch.org](https://pytorch.org/get-started/locally/)),
+then:
+
 ```
-python main.py
+pip install -r requirements.txt
+python main.py --input input_video/nba.mp4 --output output/result.avi
 ```
 
-Expects `input_video/nba.mp4`, and weights at `models/object_detection.pth`. To keep the weights
-elsewhere, pass the path to `Tracker(weights_path=...)` or set `BASKETBALL_CV_WEIGHTS`.
+| Flag | Default | |
+|---|---|---|
+| `--input` | `input_video/nba.mp4` | input clip |
+| `--output` | `output/result.avi` | annotated video, written at the input's frame rate |
+| `--weights` | `BASKETBALL_CV_WEIGHTS`, else `models/object_detection.pth` | model weights |
+| `--stub` | `stubs/object_track_stubs.pkl` | cache of tracked detections |
+| `--fresh` | off | ignore the cache and re-run detection |
+
+**The whole clip is held in memory**, so this suits clips of a few hundred frames: a minute of
+1080p is already around 11 GB. Streaming frames through is future work.
 
 To reproduce the evaluation, with the dataset extracted under `notebooks/`:
 
 ```
 python scripts/eval_per_class.py --weights models/object_detection.pth
 ```
-
-Tested with `rfdetr==1.3.0`, `supervision==0.26.1` and `transformers<5` (rfdetr 1.3.0 does not
-import under transformers 5).
 
 **The weights, dataset and video are not in the repository**, along with rendered output and the
 virtualenv — see `.gitignore`. Reasons: the dataset is Roboflow's to distribute, weights and
@@ -107,7 +118,7 @@ video cannot be reviewed in a diff, and rendered output is regenerable.
 - **Dataset:** [`basketball-player-detection-3`](https://universe.roboflow.com/roboflow-jvuqo/basketball-player-detection-3-ycjdo)
   version 10 from Roboflow Universe, exported in COCO format.
 - **Weights:** RF-DETR Medium fine-tuned on that dataset. Not published; to get them, retrain
-  with the training run in `notebooks/Untitled0 (1).ipynb`.
+  with the training run in `notebooks/train_and_evaluate.ipynb`.
 - **Input:** NBA broadcast clips.
 
 ## Future work — not started
@@ -124,15 +135,22 @@ publishes official box scores and shot charts:
    against the official box score.
 
 Also still to do for the existing half: an out-of-distribution test on footage from a different
-game, and ID-switch counting for the tracker.
+game, ID-switch counting for the tracker, and streaming video instead of loading whole clips.
 
 ## Layout
 
 ```
-main.py                    pipeline entry point
-trackers/object_tracker.py detection + ByteTrack, with stub caching
-drawers/                   overlays, boxes and labels
-utils/                     video read/write, stub load/save
-scripts/eval_per_class.py  mAP and per-class AP on the test split
-notebooks/                 training run and the original mAP evaluation
+main.py                                   pipeline entry point, CLI flags above
+trackers/object_tracker.py                detection + ByteTrack, with stub caching
+drawers/                                  overlays, boxes and labels, one colour per class
+utils/                                    video read/write, stub load/save
+scripts/eval_per_class.py                 mAP and per-class AP on the test split
+notebooks/train_and_evaluate.ipynb        the Colab training run and original evaluation, outputs kept
+notebooks/early_experiment_seg_preview.ipynb  an earlier 5-epoch try with RF-DETR Seg Preview, outputs cleared
+docs/demo.jpg                             the frame shown above
 ```
+
+## License
+
+Code under the [MIT License](LICENSE). The dataset belongs to its Roboflow Universe publisher and
+the footage to its broadcaster; neither is covered by this license or included in the repository.

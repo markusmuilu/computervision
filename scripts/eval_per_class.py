@@ -1,6 +1,6 @@
 """Evaluate the fine-tuned RF-DETR on the test split: overall mAP and per-class AP.
 
-Same metric call as the evaluation in notebooks/Untitled0 (1).ipynb, run from the repo root:
+Same metric call as the evaluation in notebooks/train_and_evaluate.ipynb, run from the repo root:
 
     python scripts/eval_per_class.py
 """
